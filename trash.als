@@ -23,8 +23,35 @@ pred restore [f : File] {
   File' = File       // frame condition on File
 }
 
-fact trans {
-  always (empty or (some f : File | delete[f] or restore[f]))
+pred do_something_else {
+  File' = File
+  Trash' = Trash
 }
 
-run example {}
+pred forceDelete[f: File] {
+  File' = File - f
+  Trash' = Trash - f
+}
+
+fact trans {
+  always (
+    empty
+    or (some f : File | delete[f] or restore[f] or forceDelete[f])
+    or do_something_else
+  )
+}
+
+
+//run example {} for 5
+
+/*assert restore_after_delete {
+  always (all f : File | restore[f] implies once delete[f])
+}
+
+check restore_after_delete for 5 but 20 steps
+*/
+assert delete_all {
+  always ((Trash = File and empty) implies after always no File)
+}
+
+check delete_all for 5 but 20 steps
